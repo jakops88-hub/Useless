@@ -298,6 +298,31 @@ body {
 }
 
 /* ============================================================
+   COUNTDOWN OVERLAY
+   ============================================================ */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 20vw, 10rem);
+  font-weight: bold;
+  color: var(--clr-white);
+  text-shadow:
+    0 0 20px rgba(255,255,255,0.8),
+    3px 3px 0 #000;
+  background: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.countdown-overlay.hidden {
+  display: none;
+}
+
+/* ============================================================
    TICKER TAPE
    ============================================================ */
 .ticker-tape {
