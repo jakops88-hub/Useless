@@ -8,9 +8,13 @@ const webcamPlaceholder = document.getElementById('webcam-placeholder');
 const countdownOverlay  = document.getElementById('countdown-overlay');
 const snapshotCanvas    = document.getElementById('snapshot-canvas');
 const resultsArea       = document.getElementById('results-area');
+const verdict418Title   = document.getElementById('verdict-418-title');
+const teapotIcon        = document.getElementById('teapot-icon');
+const scoreDisplay      = document.getElementById('score-display');
 const scoreNumber       = document.getElementById('score-number');
 const resultsComment    = document.getElementById('results-comment');
 const resultsBadges     = document.getElementById('results-badges');
+const downloadBtn       = document.getElementById('download-btn');
 
 // ── State ───────────────────────────────────────────────────────────────────
 let auditionActive  = false;
@@ -87,16 +91,17 @@ function startCapture() {
     const reader = new FileReader();
     reader.onload = function () {
       window.AuditionApp.audioBase64 = reader.result;
+      callGeminiAndShow();
     };
     reader.onerror = function () {
       console.warn('Failed to encode audio recording:', reader.error);
+      startBtn.disabled    = false;
+      startBtn.textContent = 'START AUDITION';
+      auditionActive       = false;
     };
     reader.readAsDataURL(blob);
 
     stopStream();
-    startBtn.disabled    = false;
-    startBtn.textContent = 'START AUDITION';
-    auditionActive       = false;
   };
 
   recorder.start();
@@ -132,6 +137,14 @@ function showResults(score, comment, badges) {
     resultsBadges.appendChild(badge);
   });
 
+  verdict418Title.hidden = true;
+  teapotIcon.hidden      = false;
+  scoreDisplay.hidden    = false;
+  resultsArea.classList.remove('is-418');
+  document.body.classList.remove('is-418');
+
+  downloadBtn.hidden = !window.AuditionApp.snapshotBase64;
+
   resultsArea.hidden = false;
   resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -139,9 +152,15 @@ function showResults(score, comment, badges) {
 // ── Hide results ────────────────────────────────────────────────────────────
 function hideResults() {
   resultsArea.hidden = true;
+  resultsArea.classList.remove('is-418');
+  document.body.classList.remove('is-418');
+  verdict418Title.hidden = true;
+  teapotIcon.hidden      = true;
+  scoreDisplay.hidden    = false;
   scoreNumber.textContent = '0';
   resultsComment.textContent = '';
   resultsBadges.innerHTML = '';
+  downloadBtn.hidden = true;
 }
 
 // ── Stop the webcam stream ──────────────────────────────────────────────────
@@ -164,13 +183,127 @@ function stopStream() {
 
 // ── Event listeners ─────────────────────────────────────────────────────────
 startBtn.addEventListener('click', startAudition);
+downloadBtn.addEventListener('click', downloadSnapshot);
+
+// ── Glass-break sound (Web Audio API) ───────────────────────────────────────
+function playGlassBreak() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx      = new AudioCtx();
+    const rate     = ctx.sampleRate;
+    const duration = 1.2;
+    const buf      = ctx.createBuffer(1, Math.floor(rate * duration), rate);
+    const data     = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const t  = i / rate;
+      data[i]  = (Math.random() * 2 - 1) * Math.exp(-t * 8);
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const hp   = ctx.createBiquadFilter();
+    hp.type    = 'highpass';
+    hp.frequency.value = 3000;
+    src.connect(hp);
+    hp.connect(ctx.destination);
+    src.start(0);
+    src.onended = function () { ctx.close(); };
+  } catch (e) {
+    console.warn('Glass-break sound unavailable:', e);
+  }
+}
+
+// ── Parse JSON response from Gemini and display the verdict ─────────────────
+// geminiJson must be an object with:
+//   is_418: boolean, score: number, comment: string, badges: string[]
+function parseAndShowVerdict(geminiJson) {
+  const is418   = !!geminiJson.is_418;
+  const comment = String(geminiJson.comment || '');
+  const score   = Number(geminiJson.score)  || 0;
+  const badges  = Array.isArray(geminiJson.badges) ? geminiJson.badges : [];
+
+  if (is418) {
+    document.body.classList.add('is-418');
+    resultsArea.classList.add('is-418');
+    playGlassBreak();
+    verdict418Title.hidden = false;
+    teapotIcon.hidden      = true;
+    scoreDisplay.hidden    = true;
+  } else {
+    document.body.classList.remove('is-418');
+    resultsArea.classList.remove('is-418');
+    verdict418Title.hidden = true;
+    teapotIcon.hidden      = false;
+    scoreDisplay.hidden    = false;
+    scoreNumber.textContent = score;
+  }
+
+  resultsComment.textContent = comment;
+  resultsBadges.innerHTML    = '';
+  badges.forEach(function (label) {
+    const badge       = document.createElement('span');
+    badge.className   = 'badge';
+    badge.textContent = label;
+    resultsBadges.appendChild(badge);
+  });
+
+  downloadBtn.hidden = !window.AuditionApp.snapshotBase64;
+
+  resultsArea.hidden = false;
+  resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── Send snapshot + audio to Gemini and return the verdict object ────────────
+// Replace the body of this function with the real Gemini API call once an
+// API key is available.  The resolved value must have the shape:
+//   { is_418: boolean, score: number, comment: string, badges: string[] }
+async function sendToGemini(imageBase64, audioBase64) {
+  throw new Error(
+    'Gemini API not yet configured. ' +
+    'Implement sendToGemini() with a real API key to enable verdicts.'
+  );
+}
+
+// ── Orchestrate: call Gemini, then display the verdict ──────────────────────
+async function callGeminiAndShow() {
+  startBtn.textContent = 'Consulting the Judges…';
+  startBtn.disabled    = true;
+  try {
+    const response = await sendToGemini(
+      window.AuditionApp.snapshotBase64,
+      window.AuditionApp.audioBase64
+    );
+    parseAndShowVerdict(response);
+  } catch (err) {
+    console.warn('Gemini API error:', err);
+  } finally {
+    startBtn.disabled    = false;
+    startBtn.textContent = 'START AUDITION';
+    auditionActive       = false;
+  }
+}
+
+// ── Download the audition snapshot ──────────────────────────────────────────
+function downloadSnapshot() {
+  const base64 = window.AuditionApp.snapshotBase64;
+  if (!base64) return;
+  const a      = document.createElement('a');
+  a.href       = base64;
+  a.download   = 'audition-evidence.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 // ── Exports (for future integration / testing) ──────────────────────────────
 window.AuditionApp = {
-  startAudition:  startAudition,
-  showResults:    showResults,
-  hideResults:    hideResults,
-  stopStream:     stopStream,
-  snapshotBase64: null,
-  audioBase64:    null,
+  startAudition:       startAudition,
+  showResults:         showResults,
+  hideResults:         hideResults,
+  parseAndShowVerdict: parseAndShowVerdict,
+  sendToGemini:        sendToGemini,
+  downloadSnapshot:    downloadSnapshot,
+  stopStream:          stopStream,
+  snapshotBase64:      null,
+  audioBase64:         null,
 };

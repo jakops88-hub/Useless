@@ -457,6 +457,8 @@ body {
   gap: 0.3rem;
 }
 
+.score-display[hidden] { display: none; }
+
 .score-number {
   font-family: var(--font-display);
   font-size: clamp(3rem, 12vw, 6rem);
@@ -506,6 +508,107 @@ body {
   color: var(--clr-white);
   border: 2px solid rgba(255,255,255,0.2);
 }
+
+/* ============================================================
+   VERDICT — HTTP 418 MODE
+   ============================================================ */
+
+/* Blood-red full-page takeover */
+body.is-418 {
+  background-color: #8b0000;
+  background-image: none;
+  animation: flash-red 0.4s ease forwards;
+}
+
+body.is-418 .wallpaper {
+  background-image:
+    radial-gradient(circle at 50% 50%, rgba(255,0,0,0.25) 0%, transparent 70%);
+}
+
+@keyframes flash-red {
+  0%   { background-color: #ff0000; }
+  60%  { background-color: #cc0000; }
+  100% { background-color: #8b0000; }
+}
+
+/* Giant "HTTP ERROR 418 / I AM A TEAPOT" heading */
+.verdict-418-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8vw, 4.5rem);
+  font-weight: bold;
+  color: var(--clr-white);
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-shadow:
+    0 0 24px rgba(255,80,80,0.9),
+    3px 3px 0 #000;
+  animation: verdict-slam 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.verdict-418-title[hidden] { display: none; }
+
+@keyframes verdict-slam {
+  0%   { transform: scale(2.2); opacity: 0; }
+  80%  { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Results panel styling in 418 mode */
+.results-area.is-418 {
+  border-color: #ff3333;
+  background: linear-gradient(135deg, rgba(80,0,0,0.95) 0%, rgba(30,0,0,0.98) 100%);
+  box-shadow: 0 0 60px 20px rgba(200,0,0,0.55);
+}
+
+/* ============================================================
+   VERDICT — NORMAL MODE (golden teacup)
+   ============================================================ */
+
+.teapot-icon {
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  filter: drop-shadow(0 0 12px rgba(201,146,42,0.75));
+  animation: fadeInUp 0.4s ease both;
+  line-height: 1;
+}
+
+.teapot-icon[hidden] { display: none; }
+
+/* ============================================================
+   DOWNLOAD BUTTON
+   ============================================================ */
+
+.download-btn {
+  display: inline-block;
+  padding: 0.65rem 1.75rem;
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 2.2vw, 0.95rem);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--clr-white);
+  background: linear-gradient(180deg, #505050 0%, #2e2e2e 100%);
+  border: 2px solid #777;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.08s ease;
+  box-shadow: 0 4px 0 #111, 0 6px 14px rgba(0,0,0,0.5);
+  margin-top: 0.5rem;
+}
+
+.download-btn:hover {
+  background: linear-gradient(180deg, #666 0%, #404040 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 0 #111, 0 8px 18px rgba(0,0,0,0.55);
+}
+
+.download-btn:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #111, 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.download-btn[hidden] { display: none; }
 
 /* ============================================================
    FOOTER
