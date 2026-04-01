@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Great British Talent Extravaganza</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="wallpaper"></div>
+
+    <div class="stage-wrapper">
+      <header class="header">
+        <div class="bunting">
+          <span class="flag"></span><span class="flag"></span><span class="flag"></span>
+          <span class="flag"></span><span class="flag"></span><span class="flag"></span>
+          <span class="flag"></span><span class="flag"></span><span class="flag"></span>
+          <span class="flag"></span><span class="flag"></span><span class="flag"></span>
+        </div>
+        <h1 class="title">
+          <span class="title-top">⭐ The Great British ⭐</span>
+          <span class="title-bottom">Talent Extravaganza</span>
+        </h1>
+        <p class="subtitle">Hosted Live from Ye Olde Tea Rooms, Biscuit-upon-Shire</p>
+      </header>
+
+      <main class="main-stage">
+        <div class="spotlight-frame">
+          <div class="spotlight-label">LIVE ON STAGE</div>
+          <div class="webcam-box" id="webcam-box">
+            <video id="webcam-feed" autoplay playsinline muted></video>
+            <div class="webcam-placeholder" id="webcam-placeholder">
+              <span class="placeholder-icon">🎥</span>
+              <span class="placeholder-text">Awaiting Your Moment…</span>
+            </div>
+          </div>
+          <div class="ticker-tape">
+            <span>★ JUDGES ARE WATCHING ★ TEA IS BREWING ★ SCONES AT THE READY ★ ANYTHING COULD HAPPEN ★ &nbsp;</span>
+          </div>
+        </div>
+
+        <div class="button-area">
+          <button class="start-button" id="start-btn" type="button">
+            START AUDITION
+          </button>
+        </div>
+
+        <div class="results-area" id="results-area" aria-live="polite" hidden>
+          <div class="results-inner">
+            <h2 class="results-title">The Judges' Verdict</h2>
+            <div class="score-display" id="score-display">
+              <span class="score-number" id="score-number">0</span>
+              <span class="score-label">/ 10</span>
+            </div>
+            <p class="results-comment" id="results-comment"></p>
+            <div class="results-badges" id="results-badges"></div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>🫖 Refreshments served in the interval &nbsp;|&nbsp; No flash photography &nbsp;|&nbsp; Please silence your teacups 🫖</p>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
