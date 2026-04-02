@@ -266,7 +266,7 @@ async function sendToGemini(imageBase64, audioBase64) {
   const cleanImage = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
   const cleanAudio = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}';
 
   const payload = {
     contents: [{
