@@ -1,5 +1,9 @@
 'use strict';
 
+// ── API Configuration ───────────────────────────────────────────────────────
+// PASTE YOUR REAL GEMINI API KEY HERE
+const GEMINI_API_KEY = "AIzaSyD_2tAeFN6zmMLVAqq1xZ87NigeQUQJTIo";
+
 // ── Element references ──────────────────────────────────────────────────────
 const startBtn          = document.getElementById('start-btn');
 const webcamBox         = document.getElementById('webcam-box');
@@ -214,8 +218,6 @@ function playGlassBreak() {
 }
 
 // ── Parse JSON response from Gemini and display the verdict ─────────────────
-// geminiJson must be an object with:
-//   is_418: boolean, score: number, comment: string, badges: string[]
 function parseAndShowVerdict(geminiJson) {
   const is418   = !!geminiJson.is_418;
   const comment = String(geminiJson.comment || '');
@@ -254,14 +256,44 @@ function parseAndShowVerdict(geminiJson) {
 }
 
 // ── Send snapshot + audio to Gemini and return the verdict object ────────────
-// Replace the body of this function with the real Gemini API call once an
-// API key is available.  The resolved value must have the shape:
-//   { is_418: boolean, score: number, comment: string, badges: string[] }
 async function sendToGemini(imageBase64, audioBase64) {
-  throw new Error(
-    'Gemini API not yet configured. ' +
-    'Implement sendToGemini() with a real API key to enable verdicts.'
-  );
+  if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE") {
+    alert("Hold up! You forgot to add your API key at the top of app.js");
+    throw new Error("Missing API Key");
+  }
+
+  // Strip out the metadata headers from the base64 strings
+  const cleanImage = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+  const cleanAudio = audioBase64.includes(',') ? audioBase64.split(',')[1] : audioBase64;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+  const payload = {
+    contents: [{
+      parts: [
+        { text: "You are an extremely snobbish and judgmental 19th-century British teapot acting as an audition judge. The human in the image and audio clip is trying to prove they are worthy of becoming an HTCPCP-certified teapot by whistling. Look closely at how ridiculous their facial expression is in the image, and listen to the quality of their whistle. Give them a score between 1 and 10. If the score is below 8, you must throw an HTTP 418 I am a teapot error, refuse to approve them, and write an insulting comment about why they are a disgrace to tea culture. If they score 8 or higher, give them a passive-aggressive compliment. Respond only in strict JSON format with exactly four keys: 'score' (number), 'is_418' (boolean), 'comment' (string), and 'badges' (an array of 1 to 3 short strings representing funny awards based on their performance, like 'Leaky Spout', 'Pitchy', or 'Boiling Hot')." },
+        { inline_data: { mime_type: "image/jpeg", data: cleanImage } },
+        { inline_data: { mime_type: "audio/webm", data: cleanAudio } }
+      ]
+    }],
+    generationConfig: {
+      response_mime_type: "application/json",
+    }
+  };
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gemini API blew up with status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const rawText = data.candidates[0].content.parts[0].text;
+  return JSON.parse(rawText);
 }
 
 // ── Orchestrate: call Gemini, then display the verdict ──────────────────────
@@ -276,9 +308,12 @@ async function callGeminiAndShow() {
     parseAndShowVerdict(response);
   } catch (err) {
     console.warn('Gemini API error:', err);
+    startBtn.textContent = 'API ERROR. TRY AGAIN.';
   } finally {
-    startBtn.disabled    = false;
-    startBtn.textContent = 'START AUDITION';
+    if(startBtn.textContent !== 'API ERROR. TRY AGAIN.') {
+        startBtn.disabled    = false;
+        startBtn.textContent = 'START AUDITION';
+    }
     auditionActive       = false;
   }
 }
